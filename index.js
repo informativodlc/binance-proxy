@@ -267,7 +267,7 @@ app.post('/order', async (req, res) => {
 
   // Construir parámetros para Binance
   let params = `symbol=${sym}&side=${side}&type=${type}&quantity=${qty}`
-  if (price      != null) params += `&price=${price}&timeInForce=GTC`
+  if (type === 'LIMIT') params += `&price=${price}&timeInForce=GTC`
   if (stopPrice  != null) params += `&stopPrice=${stopPrice}`
 
   try {
