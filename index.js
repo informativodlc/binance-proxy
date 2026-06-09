@@ -258,9 +258,15 @@ app.post('/order', async (req, res) => {
     return res.status(400).json({ error: `Validación fallida: ${error}` })
   }
 
-  // Construir parámetros para Binance
+  // Redondear quantity a 3 decimales (precisión BTCUSDT en Binance Futuros)
   const sym = symbol.toUpperCase()
-  let params = `symbol=${sym}&side=${side}&type=${type}&quantity=${quantity}`
+  const qty = Math.round(parseFloat(quantity) * 1000) / 1000
+  if (qty === 0) {
+    return res.status(400).json({ error: 'Balance insuficiente para el tamaño mínimo de orden en BTCUSDT (mínimo 0.001 BTC)' })
+  }
+
+  // Construir parámetros para Binance
+  let params = `symbol=${sym}&side=${side}&type=${type}&quantity=${qty}`
   if (price      != null) params += `&price=${price}&timeInForce=GTC`
   if (stopPrice  != null) params += `&stopPrice=${stopPrice}`
 
@@ -299,8 +305,14 @@ app.post('/order/stop', async (req, res) => {
     return res.status(400).json({ error: `Validación fallida: ${error}` })
   }
 
-  const sym    = symbol.toUpperCase()
-  const params = `symbol=${sym}&side=${side}&type=STOP_MARKET&stopPrice=${stopPrice}&quantity=${quantity}&closePosition=false`
+  // Redondear quantity a 3 decimales (precisión BTCUSDT en Binance Futuros)
+  const sym = symbol.toUpperCase()
+  const qty = Math.round(parseFloat(quantity) * 1000) / 1000
+  if (qty === 0) {
+    return res.status(400).json({ error: 'Balance insuficiente para el tamaño mínimo de orden en BTCUSDT (mínimo 0.001 BTC)' })
+  }
+
+  const params = `symbol=${sym}&side=${side}&type=STOP_MARKET&stopPrice=${stopPrice}&quantity=${qty}&closePosition=false`
 
   try {
     const result = await binancePost('/fapi/v1/order', params, apiKey, secret)
